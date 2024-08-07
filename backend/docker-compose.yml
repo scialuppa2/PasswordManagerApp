@@ -1,0 +1,10 @@
+services:
+  postgres:
+    container_name: postgres-db
+    image: postgres:16.3
+    environment:
+      POSTGRES_PASSWORD: project
+      POSTGRES_DB: laser_pswmng
+      POSTGRES_USER: admin
+    ports:
+      - 5432:5432

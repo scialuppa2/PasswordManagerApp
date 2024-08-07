@@ -1,0 +1,30 @@
+body.dark .navbar {
+    padding: 10px;
+    color: rgb(251, 251, 251);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  body.light .navbar{
+    padding: 10px;
+    color: rgba(44, 109, 128, 0.9);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  body.dark .navbar-welcome {
+    font-size: 1.2em;
+    color: rgb(251, 251, 251);
+  }
+
+  body.light .navbar-welcome {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: rgba(44, 109, 128, 0.9);
+  }
+
+  
+
+  
