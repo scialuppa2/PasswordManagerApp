@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { axiosInstance } from '../../api/axiosConfig';
 import { handleApiError } from '../../api/apiUtils';
@@ -10,7 +10,23 @@ const AddPassword = ({ onClose }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [directories, setDirectories] = useState([]);
+  const [selectedDirectoryId, setSelectedDirectoryId] = useState('');
   const { userId } = useAuth();
+
+  const loadDirectories = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get(`/directories/user/${userId}`);
+      setDirectories(response.data);
+    } catch (error) {
+      console.error('Error loading directories:', error);
+      alert(handleApiError(error));
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    loadDirectories();
+  }, [loadDirectories]);
 
   const handleAddPassword = async () => {
     if (!url || !username || !password) {
@@ -21,17 +37,26 @@ const AddPassword = ({ onClose }) => {
     setLoading(true);
 
     try {
-      const response = await axiosInstance.post(`/password-entries/user/${userId}`, {
-        url,
-        username,
-        password
-      });
+      const response = await axiosInstance.post(`/password-entries/user/${userId}`,
+        {
+          url,
+          username,
+          password,
+        },
+        {
+          params: {
+            directoryId: selectedDirectoryId,
+          },
+        }
+      );
+      
 
       if (response.status === 201) {
         alert('Success: Password added successfully');
         setUrl('');
         setUsername('');
         setPassword('');
+        setSelectedDirectoryId(''); 
         onClose();
       } else {
         alert('Error: Failed to add password');
@@ -46,7 +71,6 @@ const AddPassword = ({ onClose }) => {
 
   return (
     <div className='add-form'>
-      <h2>Add Password</h2>
       <form onSubmit={(e) => { e.preventDefault(); handleAddPassword(); }}>
         <div style={{ marginBottom: '1em' }}>
           <input
@@ -71,6 +95,20 @@ const AddPassword = ({ onClose }) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+        </div>
+        <div className='form-group'>
+          <select
+            id="directory-select"
+            value={selectedDirectoryId}
+            onChange={(e) => setSelectedDirectoryId(e.target.value)}
+          >
+            <option value="">Choose a directory</option>
+            {directories.map((directory) => (
+              <option key={directory.id} value={directory.id}>
+                {directory.name}
+              </option>
+            ))}
+          </select>
         </div>
         <button className='btn btn-signin' type="submit" disabled={loading}>
           {loading ? <Spinner /> : 'Confirm'}

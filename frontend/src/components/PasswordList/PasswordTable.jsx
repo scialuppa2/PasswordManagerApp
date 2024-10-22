@@ -22,7 +22,7 @@ const PasswordTable = ({ passwords, decryptedPasswords, shownPasswordId, handleS
   return (
     <div className={`row password-card ${isVisible ? 'visible' : 'hidden'}`}>
       {localPasswords.map((password) => (
-        <div className="col-md-6 col-lg-4 col-xxl-3" key={password.id}>
+        <div className="col-md-6 col-xl-4" key={password.id}>
           <div className="card my-3">
             <div className="card-body d-flex flex-column justify-content-between">
               <div>
