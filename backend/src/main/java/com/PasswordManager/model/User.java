@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-
 @Entity
 @Table(name = "Users")
 public class User {
@@ -27,6 +26,10 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Log> logs = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Directory> directories = new ArrayList<>();
 
     public UUID getId() {
         return id;
@@ -68,4 +71,11 @@ public class User {
         this.logs = logs;
     }
 
+    public List<Directory> getDirectories() {
+        return directories;
+    }
+
+    public void setDirectories(List<Directory> directories) {
+        this.directories = directories;
+    }
 }

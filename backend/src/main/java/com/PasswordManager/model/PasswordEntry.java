@@ -20,6 +20,11 @@ public class PasswordEntry {
     @JsonIgnore
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "directory_id", nullable = true)
+    @JsonIgnore
+    private Directory directory;
+
     @Column(nullable = false)
     private String url;
 
@@ -34,7 +39,9 @@ public class PasswordEntry {
     @Transient
     private UUID userId;
 
+    public PasswordEntry() {}
 
+    // Getters e Setters
     public UUID getId() {
         return id;
     }
@@ -49,9 +56,14 @@ public class PasswordEntry {
 
     public void setUser(User user) {
         this.user = user;
-        if (user != null) {
-            this.userId = user.getId();
-        }
+    }
+
+    public Directory getDirectory() {
+        return directory;
+    }
+
+    public void setDirectory(Directory directory) {
+        this.directory = directory;
     }
 
     public String getUrl() {
@@ -90,8 +102,7 @@ public class PasswordEntry {
         return user != null ? user.getId() : null;
     }
 
-
-    public void setUserId(UUID userId) {
-        this.userId = userId;
+    public UUID getDirectoryId() {
+        return directory != null ? directory.getId() : null;
     }
 }

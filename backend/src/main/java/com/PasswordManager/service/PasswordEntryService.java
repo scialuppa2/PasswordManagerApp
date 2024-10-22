@@ -1,8 +1,10 @@
 package com.PasswordManager.service;
 
 import com.PasswordManager.exception.ResourceNotFoundException;
+import com.PasswordManager.model.Directory;
 import com.PasswordManager.model.PasswordEntry;
 import com.PasswordManager.model.User;
+import com.PasswordManager.repository.DirectoryRepository;
 import com.PasswordManager.repository.PasswordEntryRepository;
 import com.PasswordManager.repository.UserRepository;
 import com.PasswordManager.security.CryptUtils;
@@ -24,6 +26,9 @@ public class PasswordEntryService {
     private UserRepository userRepository;
 
     @Autowired
+    private DirectoryRepository directoryRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -34,8 +39,10 @@ public class PasswordEntryService {
     public Page<PasswordEntry> findAllByUserId(UUID userId, Pageable pageable) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
         return passwordEntryRepository.findByUser(user, pageable);
     }
+
 
     public Page<PasswordEntry> findByUserIdAndUrlContainingIgnoreCase(UUID userId, String url, Pageable pageable) {
         User user = userRepository.findById(userId)
@@ -43,11 +50,34 @@ public class PasswordEntryService {
         return passwordEntryRepository.findByUserAndUrlContainingIgnoreCase(user, url, pageable);
     }
 
-    public PasswordEntry save(UUID userId, PasswordEntry passwordEntry) {
+    public Page<PasswordEntry> findByUserIdAndDirectoryId(UUID userId, UUID directoryId, Pageable pageable) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Directory directory = directoryRepository.findById(directoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Directory not found"));
+        return passwordEntryRepository.findByUserAndDirectory(user, directory, pageable);
+    }
+
+    public Page<PasswordEntry> findByUserIdAndDirectoryIdAndUrlContainingIgnoreCase(UUID userId, UUID directoryId, String url, Pageable pageable) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Directory directory = directoryRepository.findById(directoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Directory not found"));
+        return passwordEntryRepository.findByUserAndDirectoryAndUrlContainingIgnoreCase(user, directory, url, pageable);
+    }
+
+    public PasswordEntry save(UUID userId, UUID directoryId, PasswordEntry passwordEntry) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        Directory directory = null;
+        if (directoryId != null) {
+            directory = directoryRepository.findById(directoryId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Directory not found"));
+        }
+
         passwordEntry.setUser(user);
+        passwordEntry.setDirectory(directory);
 
         String encryptedPassword;
         try {
@@ -57,8 +87,10 @@ public class PasswordEntryService {
         }
 
         passwordEntry.setPassword(encryptedPassword);
+
         return passwordEntryRepository.save(passwordEntry);
     }
+
 
     public PasswordEntry findById(UUID id) {
         return passwordEntryRepository.findById(id)
@@ -75,11 +107,17 @@ public class PasswordEntryService {
         }
     }
 
-    public PasswordEntry update(UUID id, PasswordEntry updatedPasswordEntry) {
+    public PasswordEntry update(UUID id, PasswordEntry updatedPasswordEntry, UUID directoryId) {
         PasswordEntry existingEntry = findById(id);
 
         existingEntry.setUsername(updatedPasswordEntry.getUsername());
         existingEntry.setUrl(updatedPasswordEntry.getUrl());
+
+        if (directoryId != null) {
+            Directory directory = directoryRepository.findById(directoryId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Directory not found"));
+            existingEntry.setDirectory(directory);
+        }
 
         if (updatedPasswordEntry.getPassword() != null && !updatedPasswordEntry.getPassword().isEmpty()) {
             try {
@@ -93,12 +131,11 @@ public class PasswordEntryService {
         return passwordEntryRepository.save(existingEntry);
     }
 
+
     public void deleteById(UUID id) {
         if (!passwordEntryRepository.existsById(id)) {
             throw new ResourceNotFoundException("Password entry not found");
         }
         passwordEntryRepository.deleteById(id);
     }
-
-
 }

@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.PasswordManager.exception.ErrorDto;
+import com.PasswordManager.model.Directory;
 import com.PasswordManager.service.AuthenticationService;
 import com.PasswordManager.util.JwtUtil;
 import com.PasswordManager.service.PasswordEntryService;
@@ -38,16 +39,25 @@ public class PasswordEntryController {
             @PathVariable UUID userId,
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @RequestParam(required = false) String url,
-            @PageableDefault(size = 8) Pageable pageable) {
+            @RequestParam(required = false) UUID directoryId,
+            @PageableDefault(size = 6) Pageable pageable) {
 
         jwtUtil.validateAuthorizationHeader(authorizationHeader);
 
         Page<PasswordEntry> passwordEntriesPage;
 
-        if (url != null && !url.isEmpty()) {
-            passwordEntriesPage = passwordEntryService.findByUserIdAndUrlContainingIgnoreCase(userId, url, pageable);
+        if (directoryId != null) {
+            if (url != null && !url.isEmpty()) {
+                passwordEntriesPage = passwordEntryService.findByUserIdAndDirectoryIdAndUrlContainingIgnoreCase(userId, directoryId, url, pageable);
+            } else {
+                passwordEntriesPage = passwordEntryService.findByUserIdAndDirectoryId(userId, directoryId, pageable);
+            }
         } else {
-            passwordEntriesPage = passwordEntryService.findAllByUserId(userId, pageable);
+            if (url != null && !url.isEmpty()) {
+                passwordEntriesPage = passwordEntryService.findByUserIdAndUrlContainingIgnoreCase(userId, url, pageable);
+            } else {
+                passwordEntriesPage = passwordEntryService.findAllByUserId(userId, pageable);
+            }
         }
 
         Map<String, Object> response = new HashMap<>();
@@ -59,12 +69,11 @@ public class PasswordEntryController {
         return ResponseEntity.ok(response);
     }
 
-
-
     @PostMapping("/user/{userId}")
     public ResponseEntity<PasswordEntry> createPasswordEntry(
             @PathVariable UUID userId,
             @RequestBody PasswordEntry passwordEntry,
+            @RequestParam UUID directoryId,
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
 
         jwtUtil.validateAuthorizationHeader(authorizationHeader);
@@ -74,10 +83,11 @@ public class PasswordEntryController {
             return ResponseEntity.badRequest().body(null);
         }
 
-        PasswordEntry savedPasswordEntry = passwordEntryService.save(userId, passwordEntry);
+        PasswordEntry savedPasswordEntry = passwordEntryService.save(userId, directoryId, passwordEntry);
         logger.debug("Password entry saved successfully: {}", savedPasswordEntry);
         return ResponseEntity.status(201).body(savedPasswordEntry);
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<PasswordEntry> getPasswordEntryById(
@@ -124,11 +134,14 @@ public class PasswordEntryController {
     public ResponseEntity<PasswordEntry> updatePasswordEntry(
             @PathVariable UUID id,
             @RequestBody PasswordEntry passwordEntry,
+            @RequestParam(required = false) UUID directoryId,
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+
+        System.out.println("Received directoryId: " + directoryId);
 
         jwtUtil.validateAuthorizationHeader(authorizationHeader);
 
-        PasswordEntry updatedPasswordEntry = passwordEntryService.update(id, passwordEntry);
+        PasswordEntry updatedPasswordEntry = passwordEntryService.update(id, passwordEntry, directoryId);
         return ResponseEntity.ok(updatedPasswordEntry);
     }
 
