@@ -62,7 +62,6 @@ body.light .btn-signup:hover {
   background-color: rgba(44, 109, 128, 0.9);
   border-color: rgba(44, 109, 128, 0.9);
   margin: 10px;
-  padding: 5px;
 }
 
 body.light .btn-signin:hover {

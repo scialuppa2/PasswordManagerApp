@@ -45,7 +45,7 @@ const setupInterceptors = (navigate) => {
         Cookies.remove('authToken', { path: '/' });
         Cookies.remove('userId', { path: '/' });
         Cookies.remove('XSRF-TOKEN', { path: '/' });
-        console.error(errorMessage);
+        console.error('Unauthorized. Redirecting to login.');
         navigate('/');
       }
 
